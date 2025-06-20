@@ -1,0 +1,99 @@
+document.getElementById("username").placeholder = texts[lang].usernamePlaceholder;
+    document.getElementById("password").placeholder = texts[lang].passwordPlaceholder;
+    document.getElementById("login-btn").textContent = texts[lang].loginBtn;
+    document.getElementById("generate-title").textContent = texts[lang].generateTitle;
+    document.getElementById("topic").placeholder = texts[lang].topicPlaceholder;
+    document.getElementById("generate-btn").textContent = texts[lang].generateBtn;
+    document.getElementById("output").textContent = texts[lang].outputDefault;
+    document.getElementById("logout-btn").textContent = texts[lang].logoutBtn;
+
+    // Adjust direction
+    if (lang === "ar") {
+      document.body.dir = "rtl";
+    } else {
+      document.body.dir = "ltr";
+    }
+  }
+
+  // Simulated login (any username/password accepted)
+  function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if (!username || !password) {
+      alert(texts[lang].loginFail);
+      return;
+    }
+    // Save login state (simple)
+    localStorage.setItem("neofern_logged_in", "true");
+    localStorage.setItem("neofern_username", username);
+    alert(texts[lang].loginSuccess);
+    showMain();
+  }
+
+  // Show main page and hide login
+  function showMain() {
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("main-section").style.display = "block";
+  }
+
+  // Logout
+  function logout() {
+    localStorage.removeItem("neofern_logged_in");
+    localStorage.removeItem("neofern_username");
+    document.getElementById("login-section").style.display = "block";
+    document.getElementById("main-section").style.display = "none";
+  }
+
+  // Generate article using OpenAI API
+  async function generateArticle() {
+    const topic = document.getElementById("topic").value.trim();
+    if (!topic) {
+      alert(texts[lang].topicPlaceholder);
+      return;
+    }
+    document.getElementById("output").textContent = texts[lang].generating;
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer YOUR_OPENAI_API_KEY"
+        },
+        body: JSON.stringify({
+          model: "gpt-4",
+          messages: [{ role: "user", content: Write a detailed article about: ${topic} }]
+        })
+      });
+      if (!response.ok) {
+        document.getElementById("output").textContent = "OpenAI API Error";
+        return;
+      }
+      const data = await response.json();
+      const article = data.choices[0].message.content;
+      document.getElementById("output").textContent = article;
+    } catch (error) {
+      document.getElementById("output").textContent = "Network or API error.";
+    }
+  }
+
+  // Event listeners
+  document.getElementById("login-btn").addEventListener("click", login);
+  document.getElementById("generate-btn").addEventListener("click", generateArticle);
+  document.getElementById("logout-btn").addEventListener("click", logout);
+  document.getElementById("lang-select").addEventListener("change", (e) => {
+    lang = e.target.value;
+    updateTexts();
+  });
+
+  // On load
+  window.onload = () => {
+    updateTexts();
+    if (localStorage.getItem("neofern_logged_in") === "true") {
+      showMain();
+    }
+  };
+</script>
+
+</body>
+</html>
